@@ -1,6 +1,7 @@
 require("dotenv").config();
 
 const express = require("express");
+const fs = require("fs");
 const path = require("path");
 const { pool, initDb } = require("./db");
 
@@ -20,27 +21,89 @@ const BLOCKED_DOMAINS = new Set([
   "msn.com",
 ]);
 
-app.use(express.json());
-app.use(express.static(path.join(__dirname)));
+/**
+ * Load the index.html template once at boot and substitute {{BASE_URL}}
+ * on every request so Open Graph / WhatsApp link previews always resolve
+ * to absolute https:// URLs.
+ *
+ * Resolution order:
+ *   1. PUBLIC_BASE_URL env var (recommended in production)
+ *   2. Forwarded headers (Render / proxies) -> https://<host>
+ *   3. Plain host header (dev)
+ *
+ * The result is cached per base-URL so we only re-render when it changes.
+ */
+const INDEX_PATH = path.join(__dirname, "index.html");
+const INDEX_TEMPLATE = fs.readFileSync(INDEX_PATH, "utf8");
+const renderedCache = new Map();
 
-app.post("/api/leads", async (req, res) => {
-  const {
-    first_name,
-    last_name,
-    email,
-    company,
-    website,
-    role,
-    company_size,
-    monthly_volume,
-    use_case,
-    description,
-  } = req.body;
+function stripTrailingSlash(url) {
+  return typeof url === "string" ? url.replace(/\/+$/, "") : "";
+}
 
-  if (!first_name || !last_name || !email || !company) {
+function getBaseUrl(req) {
+  const fromEnv = stripTrailingSlash(process.env.PUBLIC_BASE_URL);
+  if (fromEnv) return fromEnv;
+
+  const proto = (req.get("x-forwarded-proto") || req.protocol || "http").split(",")[0].trim();
+  const host = (req.get("x-forwarded-host") || req.get("host") || "").split(",")[0].trim();
+  if (host) return `${proto}://${host}`;
+  return "";
+}
+
+function renderIndex(baseUrl) {
+  const safe = baseUrl || "";
+  if (renderedCache.has(safe)) return renderedCache.get(safe);
+  const html = INDEX_TEMPLATE.replace(/\{\{BASE_URL\}\}/g, safe);
+  renderedCache.set(safe, html);
+  return html;
+}
+
+function sendIndex(req, res) {
+  res.set("Cache-Control", "public, max-age=0, must-revalidate");
+  res.set("Content-Type", "text/html; charset=utf-8");
+  res.send(renderIndex(getBaseUrl(req)));
+}
+
+app.set("trust proxy", 1);
+app.use(express.json({ limit: "32kb" }));
+
+app.get(["/", "/index.html"], sendIndex);
+
+app.use(
+  express.static(path.join(__dirname), {
+    index: false,
+    setHeaders(res, filePath) {
+      if (/\.(css|js|png|jpg|jpeg|webp|svg|woff2?)$/i.test(filePath)) {
+        res.set("Cache-Control", "public, max-age=31536000, immutable");
+      }
+    },
+  })
+);
+
+function normalizeString(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+app.post("/api/applications", async (req, res) => {
+  const firstName = normalizeString(req.body.first_name);
+  const lastName = normalizeString(req.body.last_name);
+  const email = normalizeString(req.body.email).toLowerCase();
+  const company = normalizeString(req.body.company);
+  const role = normalizeString(req.body.role);
+
+  if (!firstName || !lastName || !email || !company || !role) {
     return res.status(422).json({
-      error: "First name, last name, email, and company are required.",
+      error: "First name, last name, work email, company and role are required.",
     });
+  }
+
+  if (!isValidEmail(email)) {
+    return res.status(422).json({ error: "A valid work email is required." });
   }
 
   const domain = (email.split("@")[1] || "").toLowerCase();
@@ -50,56 +113,94 @@ app.post("/api/leads", async (req, res) => {
     });
   }
 
+  if (req.body.consent !== true) {
+    return res.status(422).json({ error: "Consent is required to submit this form." });
+  }
+
+  const payload = {
+    first_name: firstName,
+    last_name: lastName,
+    email,
+    phone: normalizeString(req.body.phone) || null,
+    company,
+    website: normalizeString(req.body.website) || null,
+    role,
+    company_size: normalizeString(req.body.company_size) || null,
+    industry: normalizeString(req.body.industry) || null,
+    business_challenge: normalizeString(req.body.business_challenge) || null,
+    private_preview_interest: req.body.private_preview_interest === true,
+    vip_skybox_interest: req.body.vip_skybox_interest === true,
+    description: normalizeString(req.body.description) || null,
+    consent: req.body.consent === true,
+    user_agent: req.get("user-agent") || null,
+    ip_address: req.ip || null,
+  };
+
   try {
     await pool.query(
-      `INSERT INTO landing_page_leads
-        (first_name, last_name, email, company, website, role, company_size, monthly_volume, use_case, description)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      `INSERT INTO event_applications
+        (first_name, last_name, email, phone, company, website, role,
+         company_size, industry, business_challenge,
+         private_preview_interest, vip_skybox_interest, description, consent,
+         user_agent, ip_address)
+       VALUES
+        ($1, $2, $3, $4, $5, $6, $7,
+         $8, $9, $10,
+         $11, $12, $13, $14,
+         $15, $16)`,
       [
-        first_name.trim(),
-        last_name.trim(),
-        email.trim().toLowerCase(),
-        company.trim(),
-        website ? website.trim() : null,
-        role ? role.trim() : null,
-        company_size || null,
-        monthly_volume || null,
-        use_case || null,
-        description ? description.trim() : null,
+        payload.first_name,
+        payload.last_name,
+        payload.email,
+        payload.phone,
+        payload.company,
+        payload.website,
+        payload.role,
+        payload.company_size,
+        payload.industry,
+        payload.business_challenge,
+        payload.private_preview_interest,
+        payload.vip_skybox_interest,
+        payload.description,
+        payload.consent,
+        payload.user_agent,
+        payload.ip_address,
       ]
     );
 
-    return res.json({ success: true });
+    return res.status(201).json({ success: true });
   } catch (err) {
-    if (err.code === "23505") {
-      const detail = (err.detail || "").toLowerCase();
-      const constraint = (err.constraint || "").toLowerCase();
-      let msg;
-      if (detail.includes("(email)") || constraint.includes("email")) {
-        msg = "This email address has already been registered. If you need access, contact your team admin.";
-      } else if (detail.includes("(company)") || constraint.includes("company")) {
-        msg = "A team member from this company has already signed up. Contact us if you need access.";
-      } else {
-        msg = "This submission conflicts with an existing registration. Please contact us for help.";
-      }
-      return res.status(409).json({ error: msg });
-    }
-    console.error("Lead insert error:", err);
-    return res.status(500).json({ error: "Something went wrong. Please try again." });
+    console.error("Application insert error:", err);
+    return res.status(500).json({ error: "Could not save your application. Please try again." });
   }
+});
+
+app.get("/healthz", (_req, res) => {
+  res.json({ ok: true });
+});
+
+// SPA-style fallback: serve the rendered index.html for any unknown GET route.
+// Express 5 requires a named wildcard (no bare "*"), so we use a middleware.
+app.use((req, res, next) => {
+  if (req.method !== "GET") return next();
+  sendIndex(req, res);
 });
 
 async function start() {
   try {
-    await initDb();
-    console.log("Database ready — landing_page_leads table ensured.");
+    if (process.env.DATABASE_URL) {
+      await initDb();
+      console.log("Database ready — event_applications table ensured.");
+    } else {
+      console.warn("DATABASE_URL is not set. /api/applications will fail until configured.");
+    }
   } catch (err) {
     console.error("Failed to initialize database:", err.message);
     process.exit(1);
   }
 
   app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+    console.log(`The New Money landing page running on port ${PORT}`);
   });
 }
 
