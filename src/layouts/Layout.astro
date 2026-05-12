@@ -1,0 +1,93 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+  baseUrl?: string;
+}
+
+const {
+  title = "The New Money | YouHodler Business Event in Turin",
+  description = "An invitation-only YouHodler business event in Turin for CEOs, CFOs and decision makers exploring how digital assets can solve real corporate finance challenges.",
+  baseUrl = "",
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0E0F13" />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content="YouHodler" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+
+    <link rel="canonical" href={`${baseUrl}/`} />
+    <link rel="icon" type="image/webp" href="/yh-logo.webp" />
+    <link rel="apple-touch-icon" href="/yh-logo.webp" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="YouHodler" />
+    <meta property="og:url" content={`${baseUrl}/`} />
+    <meta property="og:title" content="The New Money — YouHodler Business Event in Turin" />
+    <meta property="og:description" content="Invitation-only · Turin · Sunday, 24 May 2026. A private afternoon at Stadio Olimpico Grande Torino for CEOs, CFOs and decision makers exploring what digital assets can do for business — followed by Torino vs Juventus." />
+    <meta property="og:image" content={`${baseUrl}/og-image.jpg`} />
+    <meta property="og:image:secure_url" content={`${baseUrl}/og-image.jpg`} />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="The New Money — invitation-only YouHodler business event, Sunday, 24 May 2026 at Stadio Olimpico Grande Torino. Official sponsor of Torino FC." />
+    <meta property="og:locale" content="en_US" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="The New Money — YouHodler Business Event in Turin" />
+    <meta name="twitter:description" content="Invitation-only · Turin · Sunday, 24 May 2026. A private business afternoon at Stadio Olimpico Grande Torino, followed by Torino vs Juventus." />
+    <meta name="twitter:image" content={`${baseUrl}/og-image.jpg`} />
+    <meta name="twitter:image:alt" content="The New Money — YouHodler business event, Sunday, 24 May 2026 in Turin." />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet" />
+
+    <link rel="stylesheet" href="/styles.css" />
+
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "BusinessEvent",
+      "name": "The New Money — What Digital Assets Can Do for Your Business Today",
+      "startDate": "2026-05-24",
+      "endDate": "2026-05-24",
+      "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+      "eventStatus": "https://schema.org/EventScheduled",
+      "url": `${baseUrl}/`,
+      "image": `${baseUrl}/og-image.jpg`,
+      "location": {
+        "@type": "Place",
+        "name": "Press Room — Stadio Olimpico Grande Torino",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Via Filadelfia 191",
+          "addressLocality": "Turin",
+          "addressCountry": "IT",
+        },
+      },
+      "organizer": {
+        "@type": "Organization",
+        "name": "YouHodler",
+        "url": "https://www.youhodler.com",
+      },
+      "sponsor": {
+        "@type": "Organization",
+        "name": "YouHodler — Official Sponsor of Torino FC",
+      },
+      "description": "Invitation-only business event for CEOs, CFOs, founders and decision makers. A practical afternoon on what digital assets can do for businesses today, followed by the Torino vs Juventus derby.",
+      "isAccessibleForFree": false,
+    })} />
+  </head>
+  <body id="top">
+    <slot />
+    <script src="/script.js" defer></script>
+  </body>
+</html>
