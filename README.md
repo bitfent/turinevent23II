@@ -1,42 +1,37 @@
 # The New Money — Torino Event Landing Page
 
-Landing page for **The New Money — What Digital Assets Can Do for Your Business Today**, the YouHodler invitation-only business event at **Stadio Olimpico Grande Torino** on **23 May 2026**.
+Landing page for **The New Money — What Digital Assets Can Do for Your Business Today**, the YouHodler invitation-only business event at **Stadio Olimpico Grande Torino** on **Sunday, 24 May 2026**.
 
 YouHodler is the **official sponsor of Torino FC**. The event takes place in the Press Room of the stadium, with a complimentary derby ticket (Torino vs Juventus) for every confirmed participant.
 
 ## Stack
 
-- **Backend:** Node.js + Express
-- **Database:** Postgres (`pg`) — works with Supabase, Render Postgres, or any standard Postgres
-- **Frontend:** static HTML + vanilla CSS + vanilla JS (no build step)
+- **Framework:** Astro 6
+- **Deployment:** Vercel (`vercel.json` + `@astrojs/vercel` adapter)
+- **Database:** Neon serverless Postgres (`@neondatabase/serverless`)
 
 ## Local development
 
 ```bash
 cp .env.example .env
-# fill in DATABASE_URL with a Postgres connection string
+# set DATABASE_URL (or STORAGE_POSTGRES_URL) to your Neon connection string
 
-npm install
-npm run dev
-# open http://localhost:8080
+pnpm install
+pnpm dev
+# open http://localhost:4321
 ```
-
-The server will:
-
-1. Auto-create the `event_applications` table on boot (if `DATABASE_URL` is set).
-2. Serve the static frontend (`index.html`, `styles.css`, `script.js`, images).
-3. Expose `POST /api/applications` for the invitation form.
 
 ## Environment variables
 
-| Variable        | Purpose                                          |
-| --------------- | ------------------------------------------------ |
-| `PORT`          | HTTP port (defaults to `8080`)                   |
-| `DATABASE_URL`  | Postgres connection string                       |
+| Variable               | Purpose                                       |
+| ---------------------- | --------------------------------------------- |
+| `DATABASE_URL`         | Neon serverless Postgres connection string    |
+| `STORAGE_POSTGRES_URL` | Alternative name for the same connection string (either works) |
+| `PUBLIC_BASE_URL`      | Canonical URL used for OG tags and schema.org |
 
 ## Database schema
 
-The schema is created automatically by `db.js#initDb()` and matches:
+The table is **not** auto-created. Run this SQL in your Neon project before the first deploy:
 
 ```sql
 create table if not exists event_applications (
@@ -74,37 +69,43 @@ Recommended workflow statuses for triage:
 - `vip_candidate`
 - `vip_confirmed`
 
-## Deployment (Render)
+## API
 
-`render.yaml` is preconfigured for a Render web service:
+`POST /api/applications` — Astro API route at `src/pages/api/applications.ts`. Inserts a row into `event_applications` via the Neon serverless driver.
 
-- Node 20
-- `npm install` build, `npm start` runtime
-- Health check on `/healthz`
-- `DATABASE_URL` must be set in the Render dashboard
-
-## Files
+## File structure
 
 ```
-turinevent23II/
-├── index.html         The New Money event landing page
-├── styles.css         Dark theme + Torino granata accents
-├── script.js          Form, reveal-on-scroll, nav, FAQ
-├── server.js          Express server + /api/applications
-├── db.js              Postgres pool + initDb()
-├── stadio-torino.jpg  Stadium hero image
-├── yh_logo.png        YouHodler logo (PNG)
-├── yh-logo.webp       YouHodler logo (WebP, favicon)
-├── package.json
-├── render.yaml
-└── .env.example
+src/
+├── layouts/Layout.astro       HTML shell, meta, OG tags, schema.org
+├── pages/
+│   ├── index.astro            Single page, assembles all sections
+│   └── api/applications.ts   POST /api/applications → Neon insert
+└── components/
+    ├── Header.astro
+    ├── Hero.astro
+    ├── WhyNow.astro
+    ├── Program.astro
+    ├── UseCases.astro
+    ├── PrivatePreview.astro
+    ├── Experience.astro
+    ├── ApplicationForm.astro
+    ├── Faq.astro
+    └── Footer.astro
+public/
+├── styles.css
+├── script.js
+├── stadio-torino.jpg
+├── og-image.jpg
+├── yh_logo.png
+└── yh-logo.webp
 ```
 
 ## Production checklist
 
 Before publishing publicly:
 
-- [ ] Confirm event check-in time (14:30 vs 15:00).
+- [ ] Create the `event_applications` table in Neon before first deploy (see schema above).
 - [ ] Confirm whether the *Torino vs Juventus* wording can be used in public advertising.
 - [ ] Replace the placeholder consent line with approved legal copy.
 - [ ] Add the final YouHodler Privacy Notice link in the footer.

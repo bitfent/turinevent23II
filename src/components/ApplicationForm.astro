@@ -1,0 +1,128 @@
+---
+---
+<section id="apply" class="section section--alt" aria-labelledby="apply-title">
+  <div class="container form-section">
+    <aside class="form-copy reveal">
+      <p class="eyebrow">Request an invitation</p>
+      <h2 id="apply-title">Tell us about your company</h2>
+      <p>
+        Seats are limited and applications are reviewed manually. The YouHodler team will confirm selected guests by email.
+      </p>
+      <ul class="form-copy__list">
+        <li>
+          <span class="form-copy__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          </span>
+          Invitation-only access for senior business profiles.
+        </li>
+        <li>
+          <span class="form-copy__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          </span>
+          Manual review by the YouHodler team.
+        </li>
+        <li>
+          <span class="form-copy__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          </span>
+          Confirmed guests receive a derby ticket.
+        </li>
+      </ul>
+    </aside>
+
+    <form id="applicationForm" class="application-form reveal" novalidate>
+      <div class="form-grid">
+        <label>
+          <span>First name <em>*</em></span>
+          <input name="firstName" autocomplete="given-name" required />
+        </label>
+        <label>
+          <span>Last name <em>*</em></span>
+          <input name="lastName" autocomplete="family-name" required />
+        </label>
+        <label>
+          <span>Work email <em>*</em></span>
+          <input name="workEmail" type="email" autocomplete="email" required />
+        </label>
+        <label>
+          <span>Phone number</span>
+          <input name="phone" type="tel" autocomplete="tel" />
+        </label>
+        <label>
+          <span>Company <em>*</em></span>
+          <input name="company" autocomplete="organization" required />
+        </label>
+        <label>
+          <span>Company website</span>
+          <input name="companyWebsite" type="url" placeholder="https://" />
+        </label>
+        <label>
+          <span>Role <em>*</em></span>
+          <input name="role" autocomplete="organization-title" required />
+        </label>
+        <label>
+          <span>Company size</span>
+          <select name="companySize">
+            <option value="">Select…</option>
+            <option>1–10</option>
+            <option>11–50</option>
+            <option>51–200</option>
+            <option>201–500</option>
+            <option>500+</option>
+          </select>
+        </label>
+        <label>
+          <span>Industry</span>
+          <select name="industry">
+            <option value="">Select…</option>
+            <option>Export / Manufacturing</option>
+            <option>Luxury / Fashion</option>
+            <option>Hospitality</option>
+            <option>Automotive premium</option>
+            <option>Professional services</option>
+            <option>Fintech</option>
+            <option>Other</option>
+          </select>
+        </label>
+        <label>
+          <span>Main business challenge</span>
+          <select name="businessChallenge">
+            <option value="">Select…</option>
+            <option>International payments</option>
+            <option>Liquidity management</option>
+            <option>Multi-currency operations</option>
+            <option>Financial cost optimization</option>
+            <option>Digital asset exploration</option>
+            <option>Other</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="checkbox-stack">
+        <label class="checkbox-label">
+          <input name="privatePreviewInterest" type="checkbox" />
+          <span>I am interested in the private product preview.</span>
+        </label>
+        <label class="checkbox-label">
+          <input name="vipSkyboxInterest" type="checkbox" />
+          <span>I would like to be considered for VIP skybox access.</span>
+        </label>
+      </div>
+
+      <label class="application-form__message">
+        <span>Message</span>
+        <textarea name="message" rows="4" placeholder="Tell us what you would like to explore with the YouHodler team."></textarea>
+      </label>
+
+      <label class="checkbox-label checkbox-label--consent">
+        <input name="consent" type="checkbox" required />
+        <span>I agree to be contacted by YouHodler about this event and confirm that the information provided is accurate.</span>
+      </label>
+
+      <div class="application-form__actions">
+        <button class="btn btn--primary btn--lg" type="submit">Request an invitation</button>
+        <p id="formMessage" class="form-message" role="status" aria-live="polite"></p>
+      </div>
+    </form>
+  </div>
+</section>

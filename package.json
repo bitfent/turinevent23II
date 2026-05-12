@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "description": "The New Money — YouHodler invitation-only business event landing page in Turin. 23 May 2026, Stadio Olimpico Grande Torino.",
-  "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
   },
   "keywords": [
     "youhodler",
@@ -18,8 +18,8 @@
   "author": "YouHodler",
   "license": "UNLICENSED",
   "dependencies": {
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "pg": "^8.20.0"
+    "@astrojs/vercel": "^10.0.6",
+    "@neondatabase/serverless": "^1.1.0",
+    "astro": "^6.3.1"
   }
 }
